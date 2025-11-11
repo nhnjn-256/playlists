@@ -321,13 +321,13 @@ button:first-of-type {
 }
 
 #memo-area {
-    /* width: 100%; */
+    width: 100%;
     height: 300px;
     box-sizing: border-box;
-    resize: both;
+    resize: vertical;
     overflow: auto;
     margin: 0;
-    transition: font-size: 0.1s ease;
+    transition: font-size 0.1s ease;
     min-height: 100px;
     min-width: 200px;
 }
@@ -340,8 +340,14 @@ button:first-of-type {
     padding-bottom: 10px;
     border-bottom: 1px solid #444;
 }
-.section-header > h2,
-.section-header > h4 {
+
+.main-header {
+    align-items: center;
+    padding-right: 220px; /* UI被り防止の余白は残します */
+    box-sizing: border-box;
+}
+
+.main-header h1 {
     margin: 0;
 }
 
@@ -359,7 +365,8 @@ button:first-of-type {
 #comments-section.hidden,
 #memo-section.hidden,
 #playlist-section.hidden,
-#focus-overlay.hidden {
+#focus-overlay.hidden,
+#main-content-section.hidden { /* キューセクションを対象から削除 */
     display: none;
 }
 
@@ -445,6 +452,17 @@ button:first-of-type {
     margin-top: 8px;
 }
 
+#bottom-sections-wrapper {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+#playlist-section-wrapper,
+#memo-section-wrapper {
+    flex: 1;
+    min-width: 300px;
+}
+
 #focus-overlay {
     position: fixed;
     top: 0;
@@ -454,3 +472,5 @@ button:first-of-type {
     background-color: #000;
     z-index: 9998;
 }
+
+/* キューセクションのスタイルは削除されました */
