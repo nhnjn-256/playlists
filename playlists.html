@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube プレーヤー</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <link href="https://fonts.googleapis.com/css2?family=Fusion+Pixel+10px+Monospaced+ja&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body data-font="gothic">
+
+    <div id="focus-overlay" class="hidden"></div>
+
+    <div class="fixed-controls">
+        <button id="reset-all-button" title="すべてリセット">×</button>
+        <button id="font-toggle-button" title="フォント切り替え">Aa</button>
+        <button id="focus-mode-button" title="集中モード"><i class="bi bi-eye-slash"></i></button>
+        <button id="clear-player-button" title="動畫プレーヤーを消す"><i class="bi bi-x-lg"></i></button>
+    </div>
+
+    <h1>
+        YouTube プレーヤー
+        <span class="reference-link">
+            <a href="https://codepen.io/nhnjn_256/pen/ByjyKyq" target="_blank" rel="noopener noreferrer">(參考元)</a>
+        </span>
+    </h1>
+
+    <p id="message-area" class="message"></p>
+    <div id="video-container"></div>
+    <div id="video-details-container"></div>
+
+    <div class="control-section">
+        <h2>動畫を檢索</h2>
+        <p>キーワードまたはYouTubeのURLを入力してください。</p>
+        <div class="search-controls">
+            <input type="text" id="search-query" placeholder="キーワードまたはURL">
+            <button id="search-button">檢索 / 表示</button>
+            <button id="clear-search-button" class="clear-button">クリア</button>
+        </div>
+        <div id="search-results-container"></div>
+        <div class="load-more-container">
+            <button id="load-more-button" style="display: none;">さらに表示</button>
+        </div>
+    </div>
+
+    <hr class="separator">
+    <div class="section-header">
+        <h2>再生リストを選擇</h2>
+        <button id="toggle-playlist-button" class="toggle-section-button">表示する</button>
+    </div>
+    <div id="playlist-section" class="hidden">
+        <div id="playlist-container">
+            <iframe id="youtube-player" src="" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        </div>
+        <div id="playlist-buttons">
+            <button class="playlist-toggle" data-playlist-id="work-bgm">作業用BGM集めてみた</button>
+            <button class="playlist-toggle" data-playlist-id="cozy-jazz">Cozy Jazz</button>
+            <button class="playlist-toggle" data-playlist-id="situation-voice">Situation Voice</button>
+            <button class="playlist-toggle" data-playlist-id="genshin-piano">Genshin Piano</button>
+            <button class="playlist-toggle" data-playlist-id="twicasting">Twicasting</button>
+            <button class="playlist-toggle" data-playlist-id="one-week">1 Week</button>
+            <button class="playlist-toggle" data-playlist-id="swimsuit">水着</button>
+            <button class="playlist-toggle" data-playlist-id="9-mine">⑨と作業厨のマインクラフト</button>
+            <button class="playlist-toggle" data-playlist-id="9-ship">⑨と作業厨の沈没世界</button>
+        </div>
+    </div>
+
+    <hr class="separator">
+    <div class="section-header">
+        <h2>一時メモ帳</h2>
+        <button id="toggle-memo-button" class="toggle-section-button">表示する</button>
+    </div>
+    <div id="memo-section" class="hidden">
+        <div class="memo-container">
+            <div class="memo-controls">
+                <label for="memo-font-size-slider">文字サイズ:</label>
+                <input type="range" id="memo-font-size-slider" min="8" max="48" value="16">
+                <span id="memo-font-size-value">16px</span>
+            </div>
+            <textarea id="memo-area" placeholder="一時的なメモにご利用ください..."></textarea>
+        </div>
+    </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>
