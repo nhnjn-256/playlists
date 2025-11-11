@@ -18,12 +18,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchResultsContainer = document.getElementById('search-results-container');
     const buttonsContainer = document.getElementById('playlist-buttons');
     const playlistContainer = document.getElementById('playlist-container');
-    // const player = document.getElementById('youtube-player'); // [削除] playerは都度生成するため、ここで取得しない
     const memoArea = document.getElementById('memo-area');
     const toggleMemoButton = document.getElementById('toggle-memo-button');
     const togglePlaylistButton = document.getElementById('toggle-playlist-button');
     const memoFontSizeSlider = document.getElementById('memo-font-size-slider');
     const memoFontSizeValue = document.getElementById('memo-font-size-value');
+    const toggleMainButton = document.getElementById('toggle-main-button');
+    const mainContentSection = document.getElementById('main-content-section');
+    // [削除] キュー関連の要素取得を削除
 
     // --- 状態管理のための変数 ---
     let currentSearchQuery = '';
@@ -32,6 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentFontIndex = 0;
     let commentsNextPageToken = null;
     let currentVideoIdForComments = null;
+    // [削除] videoQueue を削除
 
     // ===================================================
     // イベントリスナーの設定
@@ -47,7 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
     clearPlayerButton.addEventListener('click', () => {
         videoContainer.innerHTML = '';
         videoDetailsContainer.innerHTML = '';
-        showMessage('動画プレーヤーをクリアしました。');
+        // [削除] キュー関連の処理を削除
+        showMessage('動畫プレーヤーをクリアしました。');
     });
 
     focusModeButton.addEventListener('click', () => {
@@ -77,22 +81,119 @@ document.addEventListener('DOMContentLoaded', () => {
         playlistSection.classList.toggle('hidden');
         togglePlaylistButton.textContent = isHidden ? '非表示にする' : '表示する';
     });
+    
+    toggleMainButton.addEventListener('click', () => {
+        const isHidden = mainContentSection.classList.toggle('hidden');
+        toggleMainButton.textContent = isHidden ? '表示する' : '非表示にする';
+    });
 
     memoFontSizeSlider.addEventListener('input', (e) => {
         const newSize = e.target.value;
         memoArea.style.fontSize = `${newSize}px`;
         memoFontSizeValue.textContent = `${newSize}px`;
     });
-
+    
+    // [削除] ドラッグ＆ドロップのイベントリスナーを削除
 
     // ===================================================
     // 機能ごとのハンドラー関数
     // ===================================================
-    function handleResetAll() { videoContainer.innerHTML = ''; videoDetailsContainer.innerHTML = ''; closePlaylistPlayer(); clearSearchResults(true); showMessage(''); }
+    function handleResetAll() {
+        videoContainer.innerHTML = '';
+        videoDetailsContainer.innerHTML = '';
+        // [削除] キュー関連の処理を削除
+        closePlaylistPlayer();
+        clearSearchResults(true);
+        showMessage('');
+    }
+
     function toggleFont() { currentFontIndex = (currentFontIndex + 1) % fonts.length; body.dataset.font = fonts[currentFontIndex]; }
-    async function handleSearch() { const query = searchQueryInput.value.trim(); if (!query) { showMessage('キーワードまたはURLを入力してください。'); return; } const videoId = extractVideoId(query); if (videoId) { clearSearchResults(true); displayVideoInMainPlayer(videoId); searchQueryInput.value = ''; return; } if (API_KEY === 'YOUR_API_KEY') { showMessage('エラー: APIキーが設定されていません。`script.js`を編集してください。'); return; } currentSearchQuery = query; nextPageToken = ''; searchResultsContainer.innerHTML = ''; loadMoreButton.style.display = 'none'; showMessage('検索中...'); await fetchAndDisplayVideos(currentSearchQuery); }
-    async function loadMoreResults() { if (!currentSearchQuery || !nextPageToken) return; loadMoreButton.disabled = true; loadMoreButton.textContent = '読み込み中...'; await fetchAndDisplayVideos(currentSearchQuery, nextPageToken); loadMoreButton.disabled = false; loadMoreButton.textContent = 'さらに表示'; }
-    async function fetchAndDisplayVideos(query, pageToken = '') { let apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&key=${API_KEY}&maxResults=8`; if (pageToken) { apiUrl += `&pageToken=${pageToken}`; } try { const response = await fetch(apiUrl); const data = await response.json(); if (!response.ok || data.error) { console.error('API Error:', data.error); const reason = data.error?.errors[0]?.reason || '不明なエラー'; const message = data.error?.message || 'APIリクエストに失敗しました。'; showMessage(`検索エラー: ${message} (理由: ${reason})`); searchResultsContainer.innerHTML = ''; return; } if (!pageToken) { showMessage(''); } if (data.items && data.items.length > 0) { data.items.forEach(item => { if (!item.id.videoId) return; const resultVideoId = item.id.videoId; const videoTitle = item.snippet.title; const thumbnailUrl = item.snippet.thumbnails.high.url; const resultItem = document.createElement('div'); resultItem.className = 'search-result-item'; resultItem.dataset.videoId = resultVideoId; resultItem.innerHTML = `<img src="${thumbnailUrl}" alt="${videoTitle}"><div class="video-title">${videoTitle}</div>`; resultItem.addEventListener('click', () => { document.querySelectorAll('.search-result-item.selected').forEach(el => el.classList.remove('selected')); resultItem.classList.add('selected'); displayVideoInMainPlayer(resultVideoId); }); searchResultsContainer.appendChild(resultItem); }); } else if (!pageToken) { showMessage('検索結果が見つかりませんでした。'); } nextPageToken = data.nextPageToken || ''; loadMoreButton.style.display = nextPageToken ? 'inline-block' : 'none'; } catch (error) { console.error('Fetch Error:', error); showMessage('検索中に通信エラーが発生しました。コンソールを確認してください。'); } }
+    
+    async function handleSearch() {
+        const query = searchQueryInput.value.trim();
+        if (!query) {
+            showMessage('キーワード又はURLを入力してください。');
+            return;
+        }
+        const videoId = extractVideoId(query);
+        if (videoId) {
+            clearSearchResults(true);
+            displayVideoInMainPlayer(videoId);
+            searchQueryInput.value = '';
+            return;
+        }
+        if (API_KEY === 'YOUR_API_KEY') {
+            showMessage('エラー: APIキーが設定されていません。`script.js`を編集してください。');
+            return;
+        }
+        currentSearchQuery = query;
+        nextPageToken = '';
+        searchResultsContainer.innerHTML = '';
+        loadMoreButton.style.display = 'none';
+        showMessage('檢索中...');
+        await fetchAndDisplayVideos(currentSearchQuery);
+    }
+    
+    async function loadMoreResults() {
+        if (!currentSearchQuery || !nextPageToken) return;
+        loadMoreButton.disabled = true;
+        loadMoreButton.textContent = '讀込中...';
+        await fetchAndDisplayVideos(currentSearchQuery, nextPageToken);
+        loadMoreButton.disabled = false;
+        loadMoreButton.textContent = '更に表示';
+    }
+
+    async function fetchAndDisplayVideos(query, pageToken = '') {
+        let apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&key=${API_KEY}&maxResults=8`;
+        if (pageToken) {
+            apiUrl += `&pageToken=${pageToken}`;
+        }
+        try {
+            const response = await fetch(apiUrl);
+            const data = await response.json();
+            if (!response.ok || data.error) {
+                console.error('API Error:', data.error);
+                const reason = data.error?.errors[0]?.reason || '不明なエラー';
+                const message = data.error?.message || 'APIリクエストに失敗しました。';
+                showMessage(`檢索エラー: ${message} (理由: ${reason})`);
+                searchResultsContainer.innerHTML = '';
+                return;
+            }
+            if (!pageToken) {
+                showMessage('');
+            }
+            if (data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    if (!item.id.videoId) return;
+                    const resultVideoId = item.id.videoId;
+                    const videoTitle = item.snippet.title;
+                    const thumbnailUrl = item.snippet.thumbnails.high.url;
+                    
+                    const resultItem = document.createElement('div');
+                    resultItem.className = 'search-result-item';
+                    resultItem.dataset.videoId = resultVideoId;
+                    resultItem.innerHTML = `<img src="${thumbnailUrl}" alt="${videoTitle}"><div class="video-title">${videoTitle}</div>`;
+                    
+                    resultItem.addEventListener('click', () => {
+                        document.querySelectorAll('.search-result-item.selected').forEach(el => el.classList.remove('selected'));
+                        resultItem.classList.add('selected');
+                        displayVideoInMainPlayer(resultVideoId);
+                    });
+
+                    // [削除] ドラッグ可能にする設定を削除
+
+                    searchResultsContainer.appendChild(resultItem);
+                });
+            } else if (!pageToken) {
+                showMessage('檢索結果が見つかりませんでした。');
+            }
+            nextPageToken = data.nextPageToken || '';
+            loadMoreButton.style.display = nextPageToken ? 'inline-block' : 'none';
+        } catch (error) {
+            console.error('Fetch Error:', error);
+            showMessage('檢索中に通信エラーが発生しました。コンソールを確認してください。');
+        }
+    }
     
     const playlists = {
         'work-bgm': 'PLbFc77UMakZ4-XwIAEuBAIiYOhYO125U8',
@@ -117,8 +218,26 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    function handleToggleComments() { const commentsSection = document.getElementById('comments-section'); const toggleBtn = document.getElementById('toggle-comments-button'); const isHidden = commentsSection.classList.contains('hidden'); commentsSection.classList.toggle('hidden'); if (isHidden) { toggleBtn.textContent = 'コメントを非表示'; if (document.getElementById('comments-list').innerHTML === '') { fetchAndDisplayComments(currentVideoIdForComments); } } else { toggleBtn.textContent = 'コメントを表示'; } }
-    function handleLoadMoreComments() { if (currentVideoIdForComments && commentsNextPageToken) { fetchAndDisplayComments(currentVideoIdForComments, commentsNextPageToken); } }
+    function handleToggleComments() {
+        const commentsSection = document.getElementById('comments-section');
+        const toggleBtn = document.getElementById('toggle-comments-button');
+        const isHidden = commentsSection.classList.contains('hidden');
+        commentsSection.classList.toggle('hidden');
+        if (isHidden) {
+            toggleBtn.textContent = 'コメントを非表示';
+            if (document.getElementById('comments-list').innerHTML === '') {
+                fetchAndDisplayComments(currentVideoIdForComments);
+            }
+        } else {
+            toggleBtn.textContent = 'コメントを表示';
+        }
+    }
+    
+    function handleLoadMoreComments() {
+        if (currentVideoIdForComments && commentsNextPageToken) {
+            fetchAndDisplayComments(currentVideoIdForComments, commentsNextPageToken);
+        }
+    }
 
     // ===================================================
     // ヘルパー関数
@@ -126,7 +245,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function displayVideoInMainPlayer(videoId) {
         videoContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
-        videoDetailsContainer.innerHTML = '<p>詳細情報を読み込み中...</p>';
+        videoDetailsContainer.innerHTML = '<p>詳細情報を讀込中...</p>';
+        // [削除] キューセクションの表示処理を削除
+        
         try {
             const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`;
             const response = await fetch(apiUrl);
@@ -183,9 +304,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (pageToken) {
             loadMoreBtn.disabled = true;
-            loadMoreBtn.textContent = '読み込み中...';
+            loadMoreBtn.textContent = '讀込中...';
         } else {
-            commentsListEl.innerHTML = '<p>コメントを読み込み中...</p>';
+            commentsListEl.innerHTML = '<p>コメントを讀込中...</p>';
         }
 
         let commentsApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet,replies&videoId=${videoId}&key=${API_KEY}&order=relevance&maxResults=15`;
@@ -199,10 +320,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (data.error) {
                 if (data.error.errors[0].reason === 'commentsDisabled') {
-                    commentsListEl.innerHTML = '<p>この動画ではコメントが無効になっています。</p>';
+                    commentsListEl.innerHTML = '<p>この動畫ではコメントが無効になっています。</p>';
                 } else {
                     console.error('Comment API Error:', data.error);
-                    commentsListEl.innerHTML = '<p>コメントの読み込み中にエラーが発生しました。</p>';
+                    commentsListEl.innerHTML = '<p>コメントの讀込中にエラーが発生しました。</p>';
                 }
                 return;
             }
@@ -232,14 +353,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (commentsNextPageToken) {
                 loadMoreBtn.style.display = 'block';
                 loadMoreBtn.disabled = false;
-                loadMoreBtn.textContent = 'さらに表示';
+                loadMoreBtn.textContent = '更に表示';
             } else {
                 loadMoreBtn.style.display = 'none';
             }
 
         } catch (error) {
             console.error('Failed to fetch comments:', error);
-            commentsListEl.innerHTML = '<p>コメントの読み込み中に通信エラーが発生しました。</p>';
+            commentsListEl.innerHTML = '<p>コメントの讀込中に通信エラーが発生しました。</p>';
         }
     }
 
@@ -272,13 +393,11 @@ document.addEventListener('DOMContentLoaded', () => {
     function formatTimeAgo(date, rtf) { const now = new Date(); const diffSeconds = Math.round((now - date) / 1000); const diffMinutes = Math.round(diffSeconds / 60); const diffHours = Math.round(diffMinutes / 60); const diffDays = Math.round(diffHours / 24); const diffWeeks = Math.round(diffDays / 7); const diffMonths = Math.round(diffDays / 30.44); const diffYears = Math.round(diffDays / 365.25); if (diffSeconds < 60) return rtf.format(-diffSeconds, 'second'); if (diffMinutes < 60) return rtf.format(-diffMinutes, 'minute'); if (diffHours < 24) return rtf.format(-diffHours, 'hour'); if (diffDays < 7) return rtf.format(-diffDays, 'day'); if (diffWeeks < 5) return rtf.format(-diffWeeks, 'week'); if (diffMonths < 12) return rtf.format(-diffMonths, 'month'); return rtf.format(-diffYears, 'year'); }
     function clearSearchResults(clearQuery = true) { searchResultsContainer.innerHTML = ''; loadMoreButton.style.display = 'none'; nextPageToken = ''; if (clearQuery) { searchQueryInput.value = ''; currentSearchQuery = ''; showMessage(''); } }
     
-    // ▼▼▼ [変更] iframeを都度生成するように変更 ▼▼▼
     function openPlaylistPlayer(playlistId) {
         if (playlists[playlistId]) {
             const embedUrlBase = 'https://www.youtube.com/embed/videoseries?list=';
             const embedUrl = embedUrlBase + playlists[playlistId];
             
-            // iframeをHTMLごと作り直す
             playlistContainer.innerHTML = `
                 <iframe id="youtube-player" src="${embedUrl}" 
                         title="YouTube video player" 
@@ -293,13 +412,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function closePlaylistPlayer() {
-        // iframeをDOMから削除する
         playlistContainer.innerHTML = ''; 
         playlistContainer.style.display = 'none';
         currentPlaylistId = null;
     }
-    // ▲▲▲ ここまで ▲▲▲
     
     function showMessage(text) { messageArea.textContent = text; }
     function extractVideoId(url) { const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/|music\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/; const match = url.match(regex); return match ? match[1] : null; }
+
+    // [削除] キューリストの更新関数を削除
 });
