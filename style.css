@@ -1,41 +1,26 @@
+/* =========================================
+   オリジナル YouTube プレーヤーのスタイル
+   ========================================= */
+
 /* フォント定義 */
-body[data-font="gothic"] {
-    font-family: '源ノ角ゴシック', sans-serif;
-}
-body[data-font="kaisho"] {
-    font-family: "Times New Roman", "HG正楷書体-PRO", "KaiTi", "Batang", serif;
-}
-body[data-font="pixel"] {
-    font-family: "Fusion Pixel 10px Monospaced ja", monospace;
-}
+body[data-font="gothic"] { font-family: '源ノ角ゴシック', sans-serif; }
+body[data-font="kaisho"] { font-family: "Times New Roman", "HG正楷書体-PRO", "KaiTi", "Batang", serif; }
+body[data-font="pixel"] { font-family: "Fusion Pixel 10px Monospaced ja", monospace; }
 body[data-font="pixel"] button,
 body[data-font="pixel"] input,
-body[data-font="pixel"] textarea {
-    font-family: "Fusion Pixel 10px Monospaced ja", monospace;
-}
+body[data-font="pixel"] textarea { font-family: "Fusion Pixel 10px Monospaced ja", monospace; }
 
 body {
     margin: 20px;
     background-color: #121212;
     color: #e0e0e0;
+    /* キャンバスのためにoverflow:hiddenにはしません（スクロールが必要なため） */
 }
 
-h1, h2 {
-    color: #ffffff;
-}
-h1 .reference-link {
-    font-size: 14px;
-    font-weight: normal;
-    vertical-align: middle;
-}
-h1 .reference-link a {
-    color: #aaa;
-    text-decoration: none;
-}
-h1 .reference-link a:hover {
-    color: #fff;
-    text-decoration: underline;
-}
+h1, h2 { color: #ffffff; }
+h1 .reference-link { font-size: 14px; font-weight: normal; vertical-align: middle; }
+h1 .reference-link a { color: #aaa; text-decoration: none; }
+h1 .reference-link a:hover { color: #fff; text-decoration: underline; }
 
 .control-section {
     background-color: #1e1e1e;
@@ -44,10 +29,7 @@ h1 .reference-link a:hover {
     padding: 10px 15px;
     margin-bottom: 10px;
 }
-
-.control-section p {
-    margin-top: 0;
-}
+.control-section p { margin-top: 0; }
 
 input[type="text"], textarea {
     width: 80%;
@@ -74,19 +56,11 @@ button {
     user-select: none;
     margin-left: 10px;
 }
-button:hover {
-    background-color: #ff1a1a;
-}
-button:first-of-type {
-    margin-left: 0;
-}
+button:hover { background-color: #ff1a1a; }
+button:first-of-type { margin-left: 0; }
 
-.clear-button {
-    background-color: #555;
-}
-.clear-button:hover {
-    background-color: #777;
-}
+.clear-button { background-color: #555; }
+.clear-button:hover { background-color: #777; }
 
 .search-controls {
     display: flex;
@@ -95,13 +69,8 @@ button:first-of-type {
     margin-bottom: 20px;
     flex-wrap: wrap;
 }
-.search-controls input {
-    flex-grow: 1;
-    margin-bottom: 0;
-}
-.search-controls button {
-    margin-left: 0;
-}
+.search-controls input { flex-grow: 1; margin-bottom: 0; }
+.search-controls button { margin-left: 0; }
 
 #playlist-buttons {
     display: flex;
@@ -110,35 +79,20 @@ button:first-of-type {
     margin-top: 20px;
     margin-bottom: 20px;
 }
-.playlist-toggle {
-    margin-left: 0;
-}
+.playlist-toggle { margin-left: 0; }
 
-#video-container,
-#playlist-container {
+#video-container, #playlist-container {
     margin-top: 20px;
     position: relative;
     width: 100%;
     padding-top: 56.25%; /* 16:9 Aspect Ratio */
     background-color: #000;
 }
-#video-container:not(:empty) {
-    display: block;
-}
-#video-container:empty {
-    display: none;
-}
-#playlist-container {
-    display: none;
-}
-#video-container iframe,
-#playlist-container iframe {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    border: 0;
+#video-container:not(:empty) { display: block; }
+#video-container:empty { display: none; }
+#playlist-container { display: none; }
+#video-container iframe, #playlist-container iframe {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;
 }
 
 .message {
@@ -175,20 +129,9 @@ button:first-of-type {
     border: 2px solid transparent;
     box-sizing: border-box;
 }
-.search-result-item:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
-}
-.search-result-item.selected {
-    border-color: #ff1a1a;
-    transform: translateY(0);
-    box-shadow: 0 0 10px rgba(255, 26, 26, 0.5);
-}
-.search-result-item img {
-    width: 100%;
-    height: auto;
-    display: block;
-}
+.search-result-item:hover { transform: translateY(-5px); box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4); }
+.search-result-item.selected { border-color: #ff1a1a; transform: translateY(0); box-shadow: 0 0 10px rgba(255, 26, 26, 0.5); }
+.search-result-item img { width: 100%; height: auto; display: block; }
 .search-result-item .video-title {
     padding: 10px;
     font-size: 14px;
@@ -203,17 +146,9 @@ button:first-of-type {
     min-height: 60px;
 }
 
-.load-more-container {
-    text-align: center;
-    margin-top: 20px;
-}
-#load-more-button {
-    background-color: #444;
-    margin-left: 0;
-}
-#load-more-button:hover {
-    background-color: #666;
-}
+.load-more-container { text-align: center; margin-top: 20px; }
+#load-more-button { background-color: #444; margin-left: 0; }
+#load-more-button:hover { background-color: #666; }
 
 #video-details-container {
     background-color: #1e1e1e;
@@ -224,14 +159,8 @@ button:first-of-type {
     margin-bottom: 20px;
     display: none;
 }
-#video-details-container:not(:empty) {
-    display: block;
-}
-.video-details-title {
-    font-size: 20px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
+#video-details-container:not(:empty) { display: block; }
+.video-details-title { font-size: 20px; font-weight: bold; margin-bottom: 10px; }
 .video-details-meta {
     display: flex;
     flex-wrap: wrap;
@@ -240,10 +169,7 @@ button:first-of-type {
     color: #aaa;
     margin-bottom: 15px;
 }
-.video-details-channel {
-    font-weight: bold;
-    color: #e0e0e0;
-}
+.video-details-channel { font-weight: bold; color: #e0e0e0; }
 .video-details-description {
     font-size: 14px;
     line-height: 1.6;
@@ -254,13 +180,8 @@ button:first-of-type {
     padding: 10px;
     border-radius: 4px;
 }
-.video-details-description a {
-    color: #3ea6ff;
-    text-decoration: none;
-}
-.video-details-description a:hover {
-    text-decoration: underline;
-}
+.video-details-description a { color: #3ea6ff; text-decoration: none; }
+.video-details-description a:hover { text-decoration: underline; }
 
 .fixed-controls {
     position: fixed;
@@ -270,10 +191,8 @@ button:first-of-type {
     display: flex;
     gap: 10px;
 }
-
 .fixed-controls button {
-    width: 40px;
-    height: 40px;
+    width: 40px; height: 40px;
     padding: 0;
     border-radius: 50%;
     background-color: rgba(30, 30, 30, 0.8);
@@ -286,40 +205,15 @@ button:first-of-type {
     backdrop-filter: blur(5px);
     -webkit-backdrop-filter: blur(5px);
 }
-.fixed-controls button:hover {
-    background-color: #bb0000;
-    border-color: #ff1a1a;
-}
-#font-toggle-button {
-    font-size: 18px;
-    font-weight: bold;
-}
-.fixed-controls button i {
-    vertical-align: middle;
-    font-size: 20px;
-}
-#clear-player-button i {
-    font-size: 24px;
-}
+.fixed-controls button:hover { background-color: #bb0000; border-color: #ff1a1a; }
+#font-toggle-button { font-size: 18px; font-weight: bold; }
+.fixed-controls button i { vertical-align: middle; font-size: 20px; }
+#clear-player-button i { font-size: 24px; }
 
-.memo-container {
-    margin-top: 20px;
-}
-
-.memo-controls {
-    margin-bottom: 10px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-#memo-font-size-slider {
-    flex-grow: 1;
-    max-width: 300px;
-}
-#memo-font-size-value {
-    min-width: 40px;
-}
-
+.memo-container { margin-top: 20px; }
+.memo-controls { margin-bottom: 10px; display: flex; gap: 10px; align-items: center; }
+#memo-font-size-slider { flex-grow: 1; max-width: 300px; }
+#memo-font-size-value { min-width: 40px; }
 #memo-area {
     width: 100%;
     height: 300px;
@@ -340,16 +234,8 @@ button:first-of-type {
     padding-bottom: 10px;
     border-bottom: 1px solid #444;
 }
-
-.main-header {
-    align-items: center;
-    padding-right: 220px; /* UI被り防止の余白は残します */
-    box-sizing: border-box;
-}
-
-.main-header h1 {
-    margin: 0;
-}
+.main-header { align-items: center; padding-right: 220px; box-sizing: border-box; }
+.main-header h1 { margin: 0; }
 
 .toggle-section-button {
     font-size: 14px;
@@ -358,15 +244,14 @@ button:first-of-type {
     margin: 0 0 0 10px;
     white-space: nowrap;
 }
-.toggle-section-button:hover {
-    background-color: #666;
-}
+.toggle-section-button:hover { background-color: #666; }
 
 #comments-section.hidden,
 #memo-section.hidden,
 #playlist-section.hidden,
 #focus-overlay.hidden,
-#main-content-section.hidden { /* キューセクションを対象から削除 */
+#main-content-section.hidden,
+#canvas-section.hidden {
     display: none;
 }
 
@@ -378,99 +263,157 @@ button:first-of-type {
     padding: 10px;
     margin-top: 15px;
 }
+.load-more-comments-container { text-align: center; margin-top: 15px; }
+#load-more-comments-button { width: 100%; padding: 10px; margin: 0; font-size: 14px; background-color: #444; }
+#load-more-comments-button:hover { background-color: #666; }
+#load-more-comments-button:disabled { background-color: #222; color: #777; cursor: not-allowed; }
 
-.load-more-comments-container {
-    text-align: center;
-    margin-top: 15px;
-}
-#load-more-comments-button {
-    width: 100%;
-    padding: 10px;
-    margin: 0;
-    font-size: 14px;
-    background-color: #444;
-}
-#load-more-comments-button:hover {
-    background-color: #666;
-}
-#load-more-comments-button:disabled {
-    background-color: #222;
-    color: #777;
-    cursor: not-allowed;
-}
+.comment-item { display: flex; align-items: flex-start; gap: 15px; margin-bottom: 20px; position: relative; }
+.comment-reply { margin-top: 15px; margin-left: 60px; padding-left: 15px; border-left: 2px solid #555; }
+.comment-author-thumbnail img { width: 40px; height: 40px; border-radius: 50%; }
+.comment-content { flex: 1; }
+.comment-author-name { font-weight: bold; font-size: 14px; color: #fff; margin-right: 8px; }
+.comment-published-date { font-size: 12px; color: #aaa; }
+.comment-text { font-size: 14px; color: #e0e0e0; margin-top: 4px; line-height: 1.5; white-space: pre-wrap; word-break: break-word; }
+.comment-text a { color: #3ea6ff; text-decoration: none; }
+.comment-text a:hover { text-decoration: underline; }
+.comment-likes { font-size: 12px; color: #aaa; margin-top: 8px; }
 
-.comment-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 15px;
-    margin-bottom: 20px;
-    position: relative;
-}
-.comment-reply {
-    margin-top: 15px;
-    margin-left: 60px;
-    padding-left: 15px;
-    border-left: 2px solid #555;
-}
-
-.comment-author-thumbnail img {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-}
-.comment-content {
-    flex: 1;
-}
-.comment-author-name {
-    font-weight: bold;
-    font-size: 14px;
-    color: #fff;
-    margin-right: 8px;
-}
-.comment-published-date {
-    font-size: 12px;
-    color: #aaa;
-}
-.comment-text {
-    font-size: 14px;
-    color: #e0e0e0;
-    margin-top: 4px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-word;
-}
-.comment-text a {
-    color: #3ea6ff;
-    text-decoration: none;
-}
-.comment-text a:hover {
-    text-decoration: underline;
-}
-.comment-likes {
-    font-size: 12px;
-    color: #aaa;
-    margin-top: 8px;
-}
-
-#bottom-sections-wrapper {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-}
-#playlist-section-wrapper,
-#memo-section-wrapper {
-    flex: 1;
-    min-width: 300px;
-}
+#bottom-sections-wrapper { display: flex; flex-wrap: wrap; gap: 20px; }
+#playlist-section-wrapper, #memo-section-wrapper { flex: 1; min-width: 300px; }
 
 #focus-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: #000;
-    z-index: 9998;
+    position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; z-index: 9998;
 }
 
-/* キューセクションのスタイルは削除されました */
+/* =========================================
+   無限キャンバスのスタイル (統合用)
+   ========================================= */
+
+#canvas-section-wrapper {
+    margin-top: 40px;
+    margin-bottom: 40px;
+}
+
+/* キャンバスの枠線と背景 */
+.canvas-wrapper-border {
+    border: 1px solid #333;
+    border-radius: 8px;
+    background-color: #1e1e1e;
+    margin-top: 20px;
+    height: 600px; /* キャンバスの高さを固定 */
+    position: relative;
+    overflow: hidden;
+}
+
+/* キャンバスコンテナ */
+.container#cv-container {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+    background-color: #1e1e1e; /* ツールに合わせた色 */
+}
+.container#cv-container:active { cursor: grabbing; }
+
+/* 無限レイヤー */
+#cv-world {
+    position: absolute;
+    top: 0; left: 0;
+    transform-origin: 0 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 0; height: 0;
+    overflow: visible;
+}
+
+/* 個々の画像カード (白枠なし修正版) */
+.cv-image-card {
+    position: relative;
+    background: transparent;
+    padding: 0;
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+    transition: transform 0.2s;
+    flex-shrink: 0;
+}
+
+.cv-image-card img {
+    display: block;
+    max-width: 500px;
+    max-height: 500px;
+    pointer-events: none;
+    border-radius: 8px;
+}
+
+/* 削除ボタン */
+.cv-delete-btn {
+    position: absolute;
+    top: -10px;
+    right: -10px;
+    width: 30px; height: 30px;
+    background: #ff4444;
+    color: white;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    text-align: center;
+    line-height: 26px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    z-index: 5;
+}
+.cv-delete-btn:hover { background: #cc0000; }
+
+/* UI類 */
+.intro#cv-intro {
+    position: absolute;
+    top: 40%; left: 50%; /* 少し上に配置 */
+    transform: translate(-50%, -50%);
+    text-align: center;
+    z-index: 100;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+.intro#cv-intro.hidden { opacity: 0; }
+.intro#cv-intro p { margin-bottom: 20px; color: #aaa; text-shadow: 0 2px 4px #000; }
+
+input[type="file"]#cv-upload { display: none; }
+.cv-btn {
+    pointer-events: auto;
+    background: #007bff;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    color: #fff;
+    display: inline-block;
+}
+
+.cv-controls {
+    position: absolute;
+    bottom: 20px; left: 50%;
+    transform: translateX(-50%);
+    background: rgba(30, 30, 30, 0.9); /* 少し濃く */
+    padding: 10px 20px;
+    border-radius: 30px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    z-index: 100;
+    border: 1px solid #555;
+}
+.cv-control-btn {
+    background: #444; color: #fff;
+    border: 1px solid #666;
+    padding: 5px 15px; border-radius: 15px;
+    cursor: pointer;
+    font-size: 13px;
+    margin: 0;
+}
+.cv-control-btn:hover { background: #666; }
+.cv-control-btn.warning:hover { background: #800; border-color: #f00; }
+#cv-zoomLevel { min-width: 50px; text-align: center; font-size: 14px; }
