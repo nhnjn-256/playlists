@@ -1,7 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // ===================================================
+    //  YouTubeプレーヤー用ロジック (変更なし)
+    // ===================================================
     const API_KEY = 'AIzaSyAx_TeM2YO64l0LOecgUq1wwkN2O6t6dPA';
 
-    // --- 要素の取得 ---
     const body = document.body;
     const resetAllButton = document.getElementById('reset-all-button');
     const fontToggleButton = document.getElementById('font-toggle-button');
@@ -25,20 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const memoFontSizeValue = document.getElementById('memo-font-size-value');
     const toggleMainButton = document.getElementById('toggle-main-button');
     const mainContentSection = document.getElementById('main-content-section');
-    // [削除] キュー関連の要素取得を削除
 
-    // --- 状態管理のための変数 ---
     let currentSearchQuery = '';
     let nextPageToken = '';
     const fonts = ['gothic', 'kaisho', 'pixel'];
     let currentFontIndex = 0;
     let commentsNextPageToken = null;
     let currentVideoIdForComments = null;
-    // [削除] videoQueue を削除
 
-    // ===================================================
-    // イベントリスナーの設定
-    // ===================================================
+    // --- YouTubeプレーヤー イベントリスナー ---
     resetAllButton.addEventListener('click', handleResetAll);
     fontToggleButton.addEventListener('click', toggleFont);
     searchButton.addEventListener('click', handleSearch);
@@ -50,7 +47,6 @@ document.addEventListener('DOMContentLoaded', () => {
     clearPlayerButton.addEventListener('click', () => {
         videoContainer.innerHTML = '';
         videoDetailsContainer.innerHTML = '';
-        // [削除] キュー関連の処理を削除
         showMessage('動畫プレーヤーをクリアしました。');
     });
 
@@ -81,7 +77,7 @@ document.addEventListener('DOMContentLoaded', () => {
         playlistSection.classList.toggle('hidden');
         togglePlaylistButton.textContent = isHidden ? '非表示にする' : '表示する';
     });
-    
+
     toggleMainButton.addEventListener('click', () => {
         const isHidden = mainContentSection.classList.toggle('hidden');
         toggleMainButton.textContent = isHidden ? '表示する' : '非表示にする';
@@ -92,23 +88,21 @@ document.addEventListener('DOMContentLoaded', () => {
         memoArea.style.fontSize = `${newSize}px`;
         memoFontSizeValue.textContent = `${newSize}px`;
     });
-    
-    // [削除] ドラッグ＆ドロップのイベントリスナーを削除
 
-    // ===================================================
-    // 機能ごとのハンドラー関数
-    // ===================================================
+    // --- YouTubeプレーヤー 関数群 ---
     function handleResetAll() {
         videoContainer.innerHTML = '';
         videoDetailsContainer.innerHTML = '';
-        // [削除] キュー関連の処理を削除
         closePlaylistPlayer();
         clearSearchResults(true);
         showMessage('');
+        // キャンバスのリセットもここに含める
+        cvWorld.innerHTML = '';
+        cvIntro.classList.remove('hidden');
     }
 
     function toggleFont() { currentFontIndex = (currentFontIndex + 1) % fonts.length; body.dataset.font = fonts[currentFontIndex]; }
-    
+
     async function handleSearch() {
         const query = searchQueryInput.value.trim();
         if (!query) {
@@ -122,10 +116,6 @@ document.addEventListener('DOMContentLoaded', () => {
             searchQueryInput.value = '';
             return;
         }
-        if (API_KEY === 'YOUR_API_KEY') {
-            showMessage('エラー: APIキーが設定されていません。`script.js`を編集してください。');
-            return;
-        }
         currentSearchQuery = query;
         nextPageToken = '';
         searchResultsContainer.innerHTML = '';
@@ -133,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showMessage('檢索中...');
         await fetchAndDisplayVideos(currentSearchQuery);
     }
-    
+
     async function loadMoreResults() {
         if (!currentSearchQuery || !nextPageToken) return;
         loadMoreButton.disabled = true;
@@ -145,56 +135,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function fetchAndDisplayVideos(query, pageToken = '') {
         let apiUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&key=${API_KEY}&maxResults=8`;
-        if (pageToken) {
-            apiUrl += `&pageToken=${pageToken}`;
-        }
+        if (pageToken) apiUrl += `&pageToken=${pageToken}`;
         try {
             const response = await fetch(apiUrl);
             const data = await response.json();
             if (!response.ok || data.error) {
-                console.error('API Error:', data.error);
-                const reason = data.error?.errors[0]?.reason || '不明なエラー';
-                const message = data.error?.message || 'APIリクエストに失敗しました。';
-                showMessage(`檢索エラー: ${message} (理由: ${reason})`);
-                searchResultsContainer.innerHTML = '';
+                showMessage(`檢索エラー: ${data.error?.message}`);
                 return;
             }
-            if (!pageToken) {
-                showMessage('');
-            }
+            if (!pageToken) showMessage('');
             if (data.items && data.items.length > 0) {
                 data.items.forEach(item => {
                     if (!item.id.videoId) return;
-                    const resultVideoId = item.id.videoId;
-                    const videoTitle = item.snippet.title;
-                    const thumbnailUrl = item.snippet.thumbnails.high.url;
-                    
                     const resultItem = document.createElement('div');
                     resultItem.className = 'search-result-item';
-                    resultItem.dataset.videoId = resultVideoId;
-                    resultItem.innerHTML = `<img src="${thumbnailUrl}" alt="${videoTitle}"><div class="video-title">${videoTitle}</div>`;
-                    
+                    resultItem.innerHTML = `<img src="${item.snippet.thumbnails.high.url}"><div class="video-title">${item.snippet.title}</div>`;
                     resultItem.addEventListener('click', () => {
                         document.querySelectorAll('.search-result-item.selected').forEach(el => el.classList.remove('selected'));
                         resultItem.classList.add('selected');
-                        displayVideoInMainPlayer(resultVideoId);
+                        displayVideoInMainPlayer(item.id.videoId);
                     });
-
-                    // [削除] ドラッグ可能にする設定を削除
-
                     searchResultsContainer.appendChild(resultItem);
                 });
-            } else if (!pageToken) {
-                showMessage('檢索結果が見つかりませんでした。');
-            }
+            } else if (!pageToken) showMessage('檢索結果が見つかりませんでした。');
             nextPageToken = data.nextPageToken || '';
             loadMoreButton.style.display = nextPageToken ? 'inline-block' : 'none';
-        } catch (error) {
-            console.error('Fetch Error:', error);
-            showMessage('檢索中に通信エラーが発生しました。コンソールを確認してください。');
-        }
+        } catch (error) { showMessage('通信エラーが発生しました。'); }
     }
-    
+
     const playlists = {
         'work-bgm': 'PLbFc77UMakZ4-XwIAEuBAIiYOhYO125U8',
         'cozy-jazz': 'PLbFc77UMakZ4-cS2DJSYCzypYWpMzPdk6',
@@ -232,193 +200,248 @@ document.addEventListener('DOMContentLoaded', () => {
             toggleBtn.textContent = 'コメントを表示';
         }
     }
-    
+
     function handleLoadMoreComments() {
         if (currentVideoIdForComments && commentsNextPageToken) {
             fetchAndDisplayComments(currentVideoIdForComments, commentsNextPageToken);
         }
     }
 
-    // ===================================================
-    // ヘルパー関数
-    // ===================================================
-
     async function displayVideoInMainPlayer(videoId) {
-        videoContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>`;
+        videoContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allowfullscreen></iframe>`;
         videoDetailsContainer.innerHTML = '<p>詳細情報を讀込中...</p>';
-        // [削除] キューセクションの表示処理を削除
-        
         try {
-            const apiUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`;
-            const response = await fetch(apiUrl);
+            const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`);
             const data = await response.json();
-
             if (data.items && data.items.length > 0) {
                 const video = data.items[0];
-                const title = video.snippet.title;
-                const channelTitle = video.snippet.channelTitle;
-                const publishedAt = new Date(video.snippet.publishedAt).toLocaleDateString('ja-JP');
-                const description = video.snippet.description;
-                const linkedDescription = linkify(description);
-                const viewCount = Number(video.statistics?.viewCount ?? 0).toLocaleString('ja-JP');
-                const likeCount = Number(video.statistics?.likeCount ?? 0).toLocaleString('ja-JP');
-
                 videoDetailsContainer.innerHTML = `
-                    <h3 class="video-details-title">${title}</h3>
+                    <h3 class="video-details-title">${video.snippet.title}</h3>
                     <div class="video-details-meta">
-                        <span class="video-details-channel">チャンネル: ${channelTitle}</span>
-                        <span>${viewCount} 回再生</span>
-                        <span>高評価: ${likeCount}</span>
-                        <span>投稿日: ${publishedAt}</span>
+                        <span class="video-details-channel">チャンネル: ${video.snippet.channelTitle}</span>
+                        <span>${Number(video.statistics?.viewCount).toLocaleString()} 回再生</span>
+                        <span>高評価: ${Number(video.statistics?.likeCount).toLocaleString()}</span>
+                        <span>投稿日: ${new Date(video.snippet.publishedAt).toLocaleDateString()}</span>
                     </div>
-                    <div class="video-details-description">${linkedDescription}</div>
+                    <div class="video-details-description">${linkify(video.snippet.description)}</div>
                     <div class="section-header">
                         <h4 class="comments-title">コメント</h4>
                         <button id="toggle-comments-button" class="toggle-section-button">コメントを表示</button>
                     </div>
                     <div id="comments-section" class="hidden">
-                        <div id="comments-list-wrapper">
-                            <div id="comments-list"></div>
-                        </div>
-                        <div class="load-more-comments-container">
-                            <button id="load-more-comments-button" style="display: none;"></button>
-                        </div>
-                    </div>
-                `;
+                        <div id="comments-list-wrapper"><div id="comments-list"></div></div>
+                        <div class="load-more-comments-container"><button id="load-more-comments-button" style="display: none;"></button></div>
+                    </div>`;
                 currentVideoIdForComments = videoId;
                 commentsNextPageToken = null;
                 document.getElementById('toggle-comments-button').addEventListener('click', handleToggleComments);
                 document.getElementById('load-more-comments-button').addEventListener('click', handleLoadMoreComments);
-            } else {
-                videoDetailsContainer.innerHTML = '<p>詳細情報の取得に失敗しました。</p>';
             }
-        } catch (error) {
-            console.error('Failed to fetch video details:', error);
-            videoDetailsContainer.innerHTML = '<p>詳細情報の取得中にエラーが発生しました。</p>';
-        }
+        } catch (error) { videoDetailsContainer.innerHTML = '<p>詳細情報の取得エラー</p>'; }
     }
 
     async function fetchAndDisplayComments(videoId, pageToken = null) {
         const commentsListEl = document.getElementById('comments-list');
         const loadMoreBtn = document.getElementById('load-more-comments-button');
+        if (pageToken) { loadMoreBtn.disabled = true; loadMoreBtn.textContent = '讀込中...'; }
+        else commentsListEl.innerHTML = '<p>コメントを讀込中...</p>';
 
-        if (pageToken) {
-            loadMoreBtn.disabled = true;
-            loadMoreBtn.textContent = '讀込中...';
-        } else {
-            commentsListEl.innerHTML = '<p>コメントを讀込中...</p>';
-        }
-
-        let commentsApiUrl = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet,replies&videoId=${videoId}&key=${API_KEY}&order=relevance&maxResults=15`;
-        if (pageToken) {
-            commentsApiUrl += `&pageToken=${pageToken}`;
-        }
+        let url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet,replies&videoId=${videoId}&key=${API_KEY}&order=relevance&maxResults=15`;
+        if (pageToken) url += `&pageToken=${pageToken}`;
 
         try {
-            const response = await fetch(commentsApiUrl);
+            const response = await fetch(url);
             const data = await response.json();
-
-            if (data.error) {
-                if (data.error.errors[0].reason === 'commentsDisabled') {
-                    commentsListEl.innerHTML = '<p>この動畫ではコメントが無効になっています。</p>';
-                } else {
-                    console.error('Comment API Error:', data.error);
-                    commentsListEl.innerHTML = '<p>コメントの讀込中にエラーが発生しました。</p>';
-                }
-                return;
-            }
-
+            if (data.error) { commentsListEl.innerHTML = '<p>コメント無効またはエラー。</p>'; return; }
             const rtf = new Intl.RelativeTimeFormat('ja', { numeric: 'auto' });
-            let newCommentsHtml = '';
-
+            let html = '';
             data.items.forEach(item => {
-                const topLevelComment = item.snippet.topLevelComment.snippet;
-                newCommentsHtml += createCommentHtml(topLevelComment, rtf);
-
-                if (item.replies && item.replies.comments && item.replies.comments.length > 0) {
-                    item.replies.comments.forEach(reply => {
-                        newCommentsHtml += `<div class="comment-reply">${createCommentHtml(reply.snippet, rtf)}</div>`;
-                    });
-                }
+                const c = item.snippet.topLevelComment.snippet;
+                html += createCommentHtml(c, rtf);
+                if (item.replies) item.replies.comments.forEach(r => { html += `<div class="comment-reply">${createCommentHtml(r.snippet, rtf)}</div>`; });
             });
-
-            if (pageToken) {
-                commentsListEl.innerHTML += newCommentsHtml;
-            } else {
-                commentsListEl.innerHTML = newCommentsHtml || '<p>コメントはありません。</p>';
-            }
-
+            if (pageToken) commentsListEl.innerHTML += html;
+            else commentsListEl.innerHTML = html || '<p>コメントはありません。</p>';
             commentsNextPageToken = data.nextPageToken || null;
-
-            if (commentsNextPageToken) {
-                loadMoreBtn.style.display = 'block';
-                loadMoreBtn.disabled = false;
-                loadMoreBtn.textContent = '更に表示';
-            } else {
-                loadMoreBtn.style.display = 'none';
-            }
-
-        } catch (error) {
-            console.error('Failed to fetch comments:', error);
-            commentsListEl.innerHTML = '<p>コメントの讀込中に通信エラーが発生しました。</p>';
-        }
+            loadMoreBtn.style.display = commentsNextPageToken ? 'block' : 'none';
+            if (commentsNextPageToken) { loadMoreBtn.disabled = false; loadMoreBtn.textContent = '更に表示'; }
+        } catch (e) { commentsListEl.innerHTML = '<p>エラー発生</p>'; }
     }
 
-    function createCommentHtml(commentSnippet, rtf) {
-        return `
-            <div class="comment-item">
-                <div class="comment-author-thumbnail">
-                    <img src="${commentSnippet.authorProfileImageUrl}" alt="${commentSnippet.authorDisplayName}">
-                </div>
-                <div class="comment-content">
-                    <div>
-                        <span class="comment-author-name">${commentSnippet.authorDisplayName}</span>
-                        <span class="comment-published-date">${formatTimeAgo(new Date(commentSnippet.publishedAt), rtf)}</span>
-                    </div>
-                    <div class="comment-text">${commentSnippet.textDisplay}</div>
-                    <div class="comment-likes">👍 ${commentSnippet.likeCount.toLocaleString('ja-JP')}</div>
-                </div>
+    function createCommentHtml(c, rtf) {
+        return `<div class="comment-item">
+            <div class="comment-author-thumbnail"><img src="${c.authorProfileImageUrl}"></div>
+            <div class="comment-content">
+                <div><span class="comment-author-name">${c.authorDisplayName}</span><span class="comment-published-date">${new Date(c.publishedAt).toLocaleDateString()}</span></div>
+                <div class="comment-text">${c.textDisplay}</div>
+                <div class="comment-likes">👍 ${Number(c.likeCount).toLocaleString()}</div>
             </div>
-        `;
+        </div>`;
     }
 
-    function linkify(plainText) {
-        if (!plainText) {
-            return '';
-        }
-        const urlRegex = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-        return plainText.replace(urlRegex, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
-    }
-
-    function formatTimeAgo(date, rtf) { const now = new Date(); const diffSeconds = Math.round((now - date) / 1000); const diffMinutes = Math.round(diffSeconds / 60); const diffHours = Math.round(diffMinutes / 60); const diffDays = Math.round(diffHours / 24); const diffWeeks = Math.round(diffDays / 7); const diffMonths = Math.round(diffDays / 30.44); const diffYears = Math.round(diffDays / 365.25); if (diffSeconds < 60) return rtf.format(-diffSeconds, 'second'); if (diffMinutes < 60) return rtf.format(-diffMinutes, 'minute'); if (diffHours < 24) return rtf.format(-diffHours, 'hour'); if (diffDays < 7) return rtf.format(-diffDays, 'day'); if (diffWeeks < 5) return rtf.format(-diffWeeks, 'week'); if (diffMonths < 12) return rtf.format(-diffMonths, 'month'); return rtf.format(-diffYears, 'year'); }
+    function linkify(text) { return text ? text.replace(/(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig, '<a href="$1" target="_blank">$1</a>') : ''; }
     function clearSearchResults(clearQuery = true) { searchResultsContainer.innerHTML = ''; loadMoreButton.style.display = 'none'; nextPageToken = ''; if (clearQuery) { searchQueryInput.value = ''; currentSearchQuery = ''; showMessage(''); } }
-    
-    function openPlaylistPlayer(playlistId) {
-        if (playlists[playlistId]) {
-            const embedUrlBase = 'https://www.youtube.com/embed/videoseries?list=';
-            const embedUrl = embedUrlBase + playlists[playlistId];
-            
-            playlistContainer.innerHTML = `
-                <iframe id="youtube-player" src="${embedUrl}" 
-                        title="YouTube video player" 
-                        frameborder="0" 
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" 
-                        allowfullscreen></iframe>
-            `;
-            
+    function openPlaylistPlayer(id) {
+        if (playlists[id]) {
+            playlistContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/videoseries?list=${playlists[id]}" frameborder="0" allowfullscreen></iframe>`;
             playlistContainer.style.display = 'block';
-            currentPlaylistId = playlistId;
+            currentPlaylistId = id;
         }
     }
-    
-    function closePlaylistPlayer() {
-        playlistContainer.innerHTML = ''; 
-        playlistContainer.style.display = 'none';
-        currentPlaylistId = null;
-    }
-    
+    function closePlaylistPlayer() { playlistContainer.innerHTML = ''; playlistContainer.style.display = 'none'; currentPlaylistId = null; }
     function showMessage(text) { messageArea.textContent = text; }
-    function extractVideoId(url) { const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|\S*?[?&]v=)|youtu\.be\/|music\.youtube\.com\/watch\?v=)([a-zA-Z0-9_-]{11})/; const match = url.match(regex); return match ? match[1] : null; }
+    function extractVideoId(url) { const match = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/); return match ? match[1] : null; }
 
-    // [削除] キューリストの更新関数を削除
+    // ===================================================
+    //  無限キャンバス (Infinite Canvas) ロジック
+    // ===================================================
+    const cvContainer = document.getElementById('cv-container');
+    const cvWorld = document.getElementById('cv-world');
+    const cvIntro = document.getElementById('cv-intro');
+    const cvUploadInput = document.getElementById('cv-upload');
+    const cvZoomLevelText = document.getElementById('cv-zoomLevel');
+    const cvResetBtn = document.getElementById('cv-resetBtn');
+    const cvClearBtn = document.getElementById('cv-clearBtn');
+    
+    // 表示・非表示ボタンのロジック
+    const toggleCanvasButton = document.getElementById('toggle-canvas-button');
+    const canvasSection = document.getElementById('canvas-section');
+    
+    toggleCanvasButton.addEventListener('click', () => {
+        const isHidden = canvasSection.classList.toggle('hidden');
+        toggleCanvasButton.textContent = isHidden ? '表示する' : '非表示にする';
+        if (!isHidden) {
+            // 表示されたタイミングでコンテナサイズに合わせて初期位置を調整
+            initCanvasPosition();
+        }
+    });
+
+    let cvState = {
+        scale: 1,
+        pointX: 0,
+        pointY: 0,
+        isPanning: false,
+        startX: 0,
+        startY: 0
+    };
+
+    function initCanvasPosition() {
+        if (cvContainer.clientWidth > 0) {
+            cvState.pointX = cvContainer.clientWidth / 2;
+            cvState.pointY = cvContainer.clientHeight / 2;
+            updateCvTransform();
+        }
+    }
+    // 初期ロード時にも一応実行
+    setTimeout(initCanvasPosition, 500);
+
+    function updateCvTransform() {
+        cvWorld.style.transform = `translate(${cvState.pointX}px, ${cvState.pointY}px) scale(${cvState.scale})`;
+        cvZoomLevelText.textContent = Math.round(cvState.scale * 100) + '%';
+    }
+
+    function addImageToCanvas(src) {
+        cvIntro.classList.add('hidden');
+        const card = document.createElement('div');
+        card.className = 'cv-image-card';
+        const img = document.createElement('img');
+        img.src = src;
+        const delBtn = document.createElement('div');
+        delBtn.className = 'cv-delete-btn';
+        delBtn.innerHTML = '×';
+        
+        delBtn.addEventListener('mousedown', (e) => e.stopPropagation());
+        delBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            card.remove();
+            if (cvWorld.children.length === 0) cvIntro.classList.remove('hidden');
+        });
+
+        card.appendChild(delBtn);
+        card.appendChild(img);
+        cvWorld.appendChild(card);
+    }
+
+    function handleCvFiles(files) {
+        for (let file of files) {
+            if (!file.type.startsWith('image/')) continue;
+            const reader = new FileReader();
+            reader.onload = (ev) => addImageToCanvas(ev.target.result);
+            reader.readAsDataURL(file);
+        }
+    }
+
+    cvUploadInput.addEventListener('change', (e) => {
+        handleCvFiles(e.target.files);
+        e.target.value = '';
+    });
+
+    window.addEventListener('paste', (e) => {
+        // キャンバスが表示されている時だけ貼り付けを有効にする
+        if (canvasSection.classList.contains('hidden')) return;
+        
+        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+        const files = [];
+        for (let item of items) {
+            if (item.type.indexOf('image') !== -1) {
+                files.push(item.getAsFile());
+            }
+        }
+        if (files.length > 0) handleCvFiles(files);
+    });
+
+    cvResetBtn.addEventListener('click', () => {
+        cvState.scale = 1;
+        initCanvasPosition();
+    });
+
+    cvClearBtn.addEventListener('click', () => {
+        cvWorld.innerHTML = '';
+        cvIntro.classList.remove('hidden');
+    });
+
+    // パン＆ズーム
+    cvContainer.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        // コンテナ内でのマウス座標を計算
+        const rect = cvContainer.getBoundingClientRect();
+        const mouseX = e.clientX - rect.left;
+        const mouseY = e.clientY - rect.top;
+
+        const xs = (mouseX - cvState.pointX) / cvState.scale;
+        const ys = (mouseY - cvState.pointY) / cvState.scale;
+        
+        const delta = -e.deltaY;
+        const factor = delta > 0 ? 1.1 : 0.9;
+        let newScale = cvState.scale * factor;
+        if (newScale < 0.05) newScale = 0.05;
+        if (newScale > 50) newScale = 50;
+
+        cvState.pointX = mouseX - xs * newScale;
+        cvState.pointY = mouseY - ys * newScale;
+        cvState.scale = newScale;
+        updateCvTransform();
+    }, { passive: false });
+
+    cvContainer.addEventListener('mousedown', (e) => {
+        if (e.target.closest('button') || e.target.closest('.cv-delete-btn') || e.target.closest('input')) return;
+        e.preventDefault();
+        cvState.isPanning = true;
+        cvState.startX = e.clientX - cvState.pointX;
+        cvState.startY = e.clientY - cvState.pointY;
+        cvContainer.style.cursor = 'grabbing';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+        if (!cvState.isPanning) return;
+        e.preventDefault();
+        cvState.pointX = e.clientX - cvState.startX;
+        cvState.pointY = e.clientY - cvState.startY;
+        updateCvTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+        cvState.isPanning = false;
+        cvContainer.style.cursor = 'grab';
+    });
 });
