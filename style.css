@@ -301,7 +301,7 @@ button:first-of-type { margin-left: 0; }
     border-radius: 8px;
     background-color: #1e1e1e;
     margin-top: 20px;
-    height: 600px; /* キャンバスの高さを固定 */
+    height: 900px; /* キャンバスの高さを固定 */
     position: relative;
     overflow: hidden;
 }
