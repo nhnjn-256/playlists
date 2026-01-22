@@ -1,6 +1,5 @@
 /* =========================================
    オリジナル YouTube プレーヤーのスタイル
-   ========================================= */
 
 /* フォント定義 */
 body[data-font="gothic"] { font-family: '源ノ角ゴシック', sans-serif; }
@@ -286,7 +285,7 @@ button:first-of-type { margin-left: 0; }
 }
 
 /* =========================================
-   AsciiMath エディタのスタイル (新設)
+   AsciiMath エディタのスタイル (上下分割に変更)
    ========================================= */
 
 #math-section-wrapper {
@@ -296,26 +295,22 @@ button:first-of-type { margin-left: 0; }
 
 .math-container {
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* 常に縦並び（上下） */
     gap: 20px;
     margin-top: 20px;
-}
-@media (min-width: 768px) {
-    .math-container {
-        flex-direction: row;
-        height: 500px;
-    }
+    /* 画面幅が広いときは高さを確保して、上下に均等に配置 */
+    min-height: 600px; 
 }
 
 .math-box {
-    flex: 1;
+    flex: 1; /* 上下のボックスがスペースを等分、または中身に応じて伸縮 */
     display: flex;
     flex-direction: column;
     background: #1e1e1e;
     border: 1px solid #333;
     border-radius: 8px;
     overflow: hidden;
-    min-height: 300px;
+    min-height: 250px; /* 最低限の高さを確保 */
 }
 
 .math-box-header {
@@ -332,7 +327,6 @@ button:first-of-type { margin-left: 0; }
     align-items: center;
 }
 
-/* ヘッダー内のスライダー制御エリア */
 .math-header-controls {
     display: flex;
     align-items: center;
@@ -366,14 +360,13 @@ button:first-of-type { margin-left: 0; }
 #math-preview {
     flex: 1;
     padding: 20px;
-    font-size: 20px; /* 初期サイズ */
+    font-size: 20px;
     overflow-y: auto;
     background-color: #121212;
     color: #e0e0e0;
     transition: font-size 0.1s ease;
 }
 
-/* 数式の各行 */
 .math-line {
     margin-bottom: 10px;
     min-height: 1.5em;
