@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================
     //  YouTubeプレーヤー用ロジック (変更なし)
     // ===================================================
-    const API_KEY = 'AIzaSyAx_TeM2YO64l0LOecgUq1wwkN2O6t6dPA';
+    const API_KEY = 'AIzaSyAx_TeM2YO64l0LOecgUq1wwkN2O6t6dPA'; // 和稀くんのキー
 
     const body = document.body;
     const resetAllButton = document.getElementById('reset-all-button');
@@ -96,9 +96,11 @@ document.addEventListener('DOMContentLoaded', () => {
         closePlaylistPlayer();
         clearSearchResults(true);
         showMessage('');
-        // キャンバスのリセットもここに含める
-        cvWorld.innerHTML = '';
-        cvIntro.classList.remove('hidden');
+        // メモ帳クリア
+        memoArea.value = '';
+        // 数式クリア
+        document.getElementById('math-input').value = '';
+        renderMath();
     }
 
     function toggleFont() { currentFontIndex = (currentFontIndex + 1) % fonts.length; body.dataset.font = fonts[currentFontIndex]; }
@@ -293,155 +295,55 @@ document.addEventListener('DOMContentLoaded', () => {
     function extractVideoId(url) { const match = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/); return match ? match[1] : null; }
 
     // ===================================================
-    //  無限キャンバス (Infinite Canvas) ロジック
+    //  AsciiMath エディタ ロジック
     // ===================================================
-    const cvContainer = document.getElementById('cv-container');
-    const cvWorld = document.getElementById('cv-world');
-    const cvIntro = document.getElementById('cv-intro');
-    const cvUploadInput = document.getElementById('cv-upload');
-    const cvZoomLevelText = document.getElementById('cv-zoomLevel');
-    const cvResetBtn = document.getElementById('cv-resetBtn');
-    const cvClearBtn = document.getElementById('cv-clearBtn');
+    const mathInput = document.getElementById('math-input');
+    const mathPreview = document.getElementById('math-preview');
+    const toggleMathButton = document.getElementById('toggle-math-button');
+    const mathSection = document.getElementById('math-section');
     
-    // 表示・非表示ボタンのロジック
-    const toggleCanvasButton = document.getElementById('toggle-canvas-button');
-    const canvasSection = document.getElementById('canvas-section');
-    
-    toggleCanvasButton.addEventListener('click', () => {
-        const isHidden = canvasSection.classList.toggle('hidden');
-        toggleCanvasButton.textContent = isHidden ? '表示する' : '非表示にする';
+    // スライダー要素の取得
+    const mathFontSizeSlider = document.getElementById('math-font-size-slider');
+    const mathFontSizeValue = document.getElementById('math-font-size-value');
+
+    toggleMathButton.addEventListener('click', () => {
+        const isHidden = mathSection.classList.toggle('hidden');
+        toggleMathButton.textContent = isHidden ? '表示する' : '非表示にする';
         if (!isHidden) {
-            // 表示されたタイミングでコンテナサイズに合わせて初期位置を調整
-            initCanvasPosition();
+            renderMath();
         }
     });
 
-    let cvState = {
-        scale: 1,
-        pointX: 0,
-        pointY: 0,
-        isPanning: false,
-        startX: 0,
-        startY: 0
-    };
+    // 文字サイズ変更イベント
+    mathFontSizeSlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        mathPreview.style.fontSize = val + 'px';
+        mathFontSizeValue.textContent = val + 'px';
+    });
 
-    function initCanvasPosition() {
-        if (cvContainer.clientWidth > 0) {
-            cvState.pointX = cvContainer.clientWidth / 2;
-            cvState.pointY = cvContainer.clientHeight / 2;
-            updateCvTransform();
-        }
-    }
-    // 初期ロード時にも一応実行
-    setTimeout(initCanvasPosition, 500);
+    function renderMath() {
+        if(mathSection.classList.contains('hidden')) return;
 
-    function updateCvTransform() {
-        cvWorld.style.transform = `translate(${cvState.pointX}px, ${cvState.pointY}px) scale(${cvState.scale})`;
-        cvZoomLevelText.textContent = Math.round(cvState.scale * 100) + '%';
-    }
-
-    function addImageToCanvas(src) {
-        cvIntro.classList.add('hidden');
-        const card = document.createElement('div');
-        card.className = 'cv-image-card';
-        const img = document.createElement('img');
-        img.src = src;
-        const delBtn = document.createElement('div');
-        delBtn.className = 'cv-delete-btn';
-        delBtn.innerHTML = '×';
+        const text = mathInput.value;
+        const lines = text.split('\n');
+        let htmlContent = '';
         
-        delBtn.addEventListener('mousedown', (e) => e.stopPropagation());
-        delBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            card.remove();
-            if (cvWorld.children.length === 0) cvIntro.classList.remove('hidden');
+        lines.forEach(line => {
+            if (line.trim() === "") {
+                htmlContent += '<div class="math-line"><br></div>';
+            } else {
+                const safeLine = line.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+                htmlContent += `<div class="math-line">\`${safeLine}\`</div>`;
+            }
         });
 
-        card.appendChild(delBtn);
-        card.appendChild(img);
-        cvWorld.appendChild(card);
-    }
+        mathPreview.innerHTML = htmlContent;
 
-    function handleCvFiles(files) {
-        for (let file of files) {
-            if (!file.type.startsWith('image/')) continue;
-            const reader = new FileReader();
-            reader.onload = (ev) => addImageToCanvas(ev.target.result);
-            reader.readAsDataURL(file);
+        if (window.MathJax) {
+            MathJax.typesetPromise([mathPreview]).catch((err) => console.log('MathJax Error:', err));
         }
     }
 
-    cvUploadInput.addEventListener('change', (e) => {
-        handleCvFiles(e.target.files);
-        e.target.value = '';
-    });
-
-    window.addEventListener('paste', (e) => {
-        // キャンバスが表示されている時だけ貼り付けを有効にする
-        if (canvasSection.classList.contains('hidden')) return;
-        
-        const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-        const files = [];
-        for (let item of items) {
-            if (item.type.indexOf('image') !== -1) {
-                files.push(item.getAsFile());
-            }
-        }
-        if (files.length > 0) handleCvFiles(files);
-    });
-
-    cvResetBtn.addEventListener('click', () => {
-        cvState.scale = 1;
-        initCanvasPosition();
-    });
-
-    cvClearBtn.addEventListener('click', () => {
-        cvWorld.innerHTML = '';
-        cvIntro.classList.remove('hidden');
-    });
-
-    // パン＆ズーム
-    cvContainer.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        // コンテナ内でのマウス座標を計算
-        const rect = cvContainer.getBoundingClientRect();
-        const mouseX = e.clientX - rect.left;
-        const mouseY = e.clientY - rect.top;
-
-        const xs = (mouseX - cvState.pointX) / cvState.scale;
-        const ys = (mouseY - cvState.pointY) / cvState.scale;
-        
-        const delta = -e.deltaY;
-        const factor = delta > 0 ? 1.1 : 0.9;
-        let newScale = cvState.scale * factor;
-        if (newScale < 0.05) newScale = 0.05;
-        if (newScale > 50) newScale = 50;
-
-        cvState.pointX = mouseX - xs * newScale;
-        cvState.pointY = mouseY - ys * newScale;
-        cvState.scale = newScale;
-        updateCvTransform();
-    }, { passive: false });
-
-    cvContainer.addEventListener('mousedown', (e) => {
-        if (e.target.closest('button') || e.target.closest('.cv-delete-btn') || e.target.closest('input')) return;
-        e.preventDefault();
-        cvState.isPanning = true;
-        cvState.startX = e.clientX - cvState.pointX;
-        cvState.startY = e.clientY - cvState.pointY;
-        cvContainer.style.cursor = 'grabbing';
-    });
-
-    window.addEventListener('mousemove', (e) => {
-        if (!cvState.isPanning) return;
-        e.preventDefault();
-        cvState.pointX = e.clientX - cvState.startX;
-        cvState.pointY = e.clientY - cvState.startY;
-        updateCvTransform();
-    });
-
-    window.addEventListener('mouseup', () => {
-        cvState.isPanning = false;
-        cvContainer.style.cursor = 'grab';
-    });
+    mathInput.addEventListener('input', renderMath);
+    renderMath(); // 初期化
 });
