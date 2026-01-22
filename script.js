@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
     // ===================================================
-    //  YouTubeプレーヤー用ロジック (変更なし)
+    //  YouTubeプレーヤー用ロジック
     // ===================================================
     const API_KEY = 'AIzaSyAx_TeM2YO64l0LOecgUq1wwkN2O6t6dPA'; // 和稀くんのキー
 
@@ -96,11 +96,13 @@ document.addEventListener('DOMContentLoaded', () => {
         closePlaylistPlayer();
         clearSearchResults(true);
         showMessage('');
+        
         // メモ帳クリア
         memoArea.value = '';
-        // 数式クリア
-        document.getElementById('math-input').value = '';
-        renderMath();
+        
+        // 【修正箇所】数式はクリアせずに保持する
+        // document.getElementById('math-input').value = '';
+        // renderMath();
     }
 
     function toggleFont() { currentFontIndex = (currentFontIndex + 1) % fonts.length; body.dataset.font = fonts[currentFontIndex]; }
