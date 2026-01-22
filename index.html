@@ -3,10 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Playlists</title>
+    <title>Playlists & Math Editor</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link href="https://fonts.googleapis.com/css2?family=Fusion+Pixel+10px+Monospaced+ja&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+
+    <script>
+        window.MathJax = {
+            loader: { load: ['input/asciimath', 'output/chtml'] },
+            asciimath: { delimiters: [['`', '`']] }
+        };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js"></script>
 </head>
 <body data-font="gothic">
 
@@ -53,7 +61,6 @@
     <hr class="separator">
 
     <div id="bottom-sections-wrapper">
-
         <div id="playlist-section-wrapper">
             <div class="section-header">
                 <h2>再生リストを選擇</h2>
@@ -91,34 +98,39 @@
                 </div>
             </div>
         </div>
-
     </div>
 
     <hr class="separator">
 
-    <div id="canvas-section-wrapper">
+    <div id="math-section-wrapper">
         <div class="section-header">
-            <h2>無限キャンバス</h2>
-            <button id="toggle-canvas-button" class="toggle-section-button">表示する</button>
+            <h2>数式入力</h2>
+            <button id="toggle-math-button" class="toggle-section-button">表示する</button>
         </div>
         
-        <div id="canvas-section" class="hidden">
-            <div class="canvas-wrapper-border">
-                <div class="container" id="cv-container">
-                    <div class="intro" id="cv-intro">
-                        <p>画像を次々と貼り付け (Ctrl+V)<br>またはドラッグ&ドロップ</p>
-                        <label for="cv-upload" class="cv-btn">画像を追加</label>
-                        <input type="file" id="cv-upload" accept="image/*" multiple>
-                    </div>
+        <div id="math-section" class="hidden">
+            <div class="math-container">
+                <div class="math-box">
+                    <div class="math-box-header">入力 (AsciiMath形式 / Enterで改行)</div>
+                    <textarea id="math-input" placeholder="ここに数式を入力... 例: x = (-b + sqrt(b^2 - 4ac)) / (2a)">((1,2),(3,4))
+"m/s"bb(B)bbb(H)cc(L)fr(A)tt(code)
+NNZZQQRRCC
+vec(x) bar(x) dot(x) tilde(x) hat(x)
+sqrt(x) quad root(n)(x)
+in uu nn vv ^^ AA EE 
+sum_(i=0)^oo int_0^oo (dely)/(delx)</textarea>
+                </div>
 
-                    <div id="cv-world">
+                <div class="math-box">
+                    <div class="math-box-header flex-header">
+                        <span>プレビュー</span>
+                        <div class="math-header-controls">
+                            <label for="math-font-size-slider">サイズ:</label>
+                            <input type="range" id="math-font-size-slider" min="12" max="64" value="20">
+                            <span id="math-font-size-value">20px</span>
                         </div>
-
-                    <div class="cv-controls" id="cv-controls">
-                        <button id="cv-resetBtn" class="cv-control-btn">中央へ戻す</button>
-                        <button id="cv-clearBtn" class="cv-control-btn warning">すべて削除</button>
-                        <span id="cv-zoomLevel">100%</span>
                     </div>
+                    <div id="math-preview"></div>
                 </div>
             </div>
         </div>
