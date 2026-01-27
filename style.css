@@ -344,9 +344,8 @@ button:first-of-type { margin-left: 0; }
 #math-input {
     flex: 1;
     border: none;
-    padding: 15px;
     font-size: 16px;
-    font-family: monospace;
+    font-family: Consolas;
     resize: none;
     outline: none;
     line-height: 1.5;
