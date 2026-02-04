@@ -1,8 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // ===================================================
-    //  YouTubeプレーヤー用ロジック (変更なし)
-    // ===================================================
-    const API_KEY = 'AIzaSyAx_TeM2YO64l0LOecgUq1wwkN2O6t6dPA'; // 和稀くんのキー
+    const API_KEY = 'AIzaSyAx_TeM2YO64l0LOecgUq1wwkN2O6t6dPA';
 
     const body = document.body;
     const resetAllButton = document.getElementById('reset-all-button');
@@ -35,7 +32,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let commentsNextPageToken = null;
     let currentVideoIdForComments = null;
 
-    // --- YouTubeプレーヤー イベントリスナー ---
+    let player = null;
+
     resetAllButton.addEventListener('click', handleResetAll);
     fontToggleButton.addEventListener('click', toggleFont);
     searchButton.addEventListener('click', handleSearch);
@@ -45,6 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
     buttonsContainer.addEventListener('click', handlePlaylistSelection);
 
     clearPlayerButton.addEventListener('click', () => {
+        if (player) {
+            player.destroy();
+            player = null;
+        }
         videoContainer.innerHTML = '';
         videoDetailsContainer.innerHTML = '';
         showMessage('動畫プレーヤーをクリアしました。');
@@ -89,19 +91,27 @@ document.addEventListener('DOMContentLoaded', () => {
         memoFontSizeValue.textContent = `${newSize}px`;
     });
 
-    // --- YouTubeプレーヤー 関数群 ---
+    document.addEventListener('click', (e) => {
+        if (e.target.classList.contains('timestamp-link')) {
+            const seconds = Number(e.target.dataset.time);
+            if (player && typeof player.seekTo === 'function') {
+                player.seekTo(seconds, true);
+                videoContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    });
+
     function handleResetAll() {
+        if (player) {
+            player.destroy();
+            player = null;
+        }
         videoContainer.innerHTML = '';
         videoDetailsContainer.innerHTML = '';
         closePlaylistPlayer();
         clearSearchResults(true);
         showMessage('');
-        
-        // メモ帳クリア
         memoArea.value = '';
-        
-        // 【修正】数式エディタのクリア処理を削除しました
-        // 数式入力は保持されます
     }
 
     function toggleFont() { currentFontIndex = (currentFontIndex + 1) % fonts.length; body.dataset.font = fonts[currentFontIndex]; }
@@ -112,13 +122,15 @@ document.addEventListener('DOMContentLoaded', () => {
             showMessage('キーワード又はURLを入力してください。');
             return;
         }
-        const videoId = extractVideoId(query);
+        const { videoId, startTime } = parseVideoUrl(query);
+        
         if (videoId) {
             clearSearchResults(true);
-            displayVideoInMainPlayer(videoId);
+            displayVideoInMainPlayer(videoId, startTime);
             searchQueryInput.value = '';
             return;
         }
+        
         currentSearchQuery = query;
         nextPageToken = '';
         searchResultsContainer.innerHTML = '';
@@ -210,14 +222,46 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    async function displayVideoInMainPlayer(videoId) {
-        videoContainer.innerHTML = `<iframe src="https://www.youtube.com/embed/${videoId}?autoplay=1" allowfullscreen></iframe>`;
+    async function displayVideoInMainPlayer(videoId, startTime = 0) {
+        if (player && typeof player.loadVideoById === 'function') {
+            player.loadVideoById({videoId: videoId, startSeconds: startTime});
+        } else {
+            videoContainer.innerHTML = '<div id="youtube-player"></div>';
+            
+            if (typeof YT !== 'undefined' && YT.Player) {
+                player = new YT.Player('youtube-player', {
+                    height: '100%',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: {
+                        'autoplay': 1,
+                        'playsinline': 1,
+                        'start': startTime
+                    }
+                });
+            } else {
+                window.onYouTubeIframeAPIReady = function() {
+                    player = new YT.Player('youtube-player', {
+                        height: '100%',
+                        width: '100%',
+                        videoId: videoId,
+                        playerVars: { 
+                            'autoplay': 1,
+                            'start': startTime
+                        }
+                    });
+                };
+            }
+        }
+
         videoDetailsContainer.innerHTML = '<p>詳細情報を讀込中...</p>';
         try {
             const response = await fetch(`https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoId}&key=${API_KEY}`);
             const data = await response.json();
             if (data.items && data.items.length > 0) {
                 const video = data.items[0];
+                const descriptionHtml = linkify(escapeHtml(video.snippet.description));
+
                 videoDetailsContainer.innerHTML = `
                     <h3 class="video-details-title">${video.snippet.title}</h3>
                     <div class="video-details-meta">
@@ -226,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span>高評価: ${Number(video.statistics?.likeCount).toLocaleString()}</span>
                         <span>投稿日: ${new Date(video.snippet.publishedAt).toLocaleDateString()}</span>
                     </div>
-                    <div class="video-details-description">${linkify(video.snippet.description)}</div>
+                    <div class="video-details-description">${descriptionHtml}</div>
                     <div class="section-header">
                         <h4 class="comments-title">コメント</h4>
                         <button id="toggle-comments-button" class="toggle-section-button">コメントを表示</button>
@@ -272,17 +316,45 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createCommentHtml(c, rtf) {
+        const safeText = escapeHtml(c.textOriginal);
+        const textWithLinks = linkify(safeText);
+        
         return `<div class="comment-item">
             <div class="comment-author-thumbnail"><img src="${c.authorProfileImageUrl}"></div>
             <div class="comment-content">
                 <div><span class="comment-author-name">${c.authorDisplayName}</span><span class="comment-published-date">${new Date(c.publishedAt).toLocaleDateString()}</span></div>
-                <div class="comment-text">${c.textDisplay}</div>
+                <div class="comment-text">${textWithLinks}</div>
                 <div class="comment-likes">👍 ${Number(c.likeCount).toLocaleString()}</div>
             </div>
         </div>`;
     }
 
-    function linkify(text) { return text ? text.replace(/(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig, '<a href="$1" target="_blank">$1</a>') : ''; }
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function linkify(text) { 
+        if (!text) return '';
+        
+        let replacedText = text.replace(/(\b(https?):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig, '<a href="$1" target="_blank">$1</a>');
+        
+        replacedText = replacedText.replace(/(^|[\s\n>])(?:(\d{1,2}):)?(\d{1,2}):(\d{2})\b/g, (match, prefix, h, m, s) => {
+            const hours = h ? parseInt(h, 10) : 0;
+            const minutes = parseInt(m, 10);
+            const seconds = parseInt(s, 10);
+            const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+            return `${prefix}<span class="timestamp-link" data-time="${totalSeconds}">${h ? h+':' : ''}${String(minutes).padStart(2,'0')}:${String(seconds).padStart(2,'0')}</span>`;
+        });
+
+        return replacedText;
+    }
+
     function clearSearchResults(clearQuery = true) { searchResultsContainer.innerHTML = ''; loadMoreButton.style.display = 'none'; nextPageToken = ''; if (clearQuery) { searchQueryInput.value = ''; currentSearchQuery = ''; showMessage(''); } }
     function openPlaylistPlayer(id) {
         if (playlists[id]) {
@@ -293,17 +365,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     function closePlaylistPlayer() { playlistContainer.innerHTML = ''; playlistContainer.style.display = 'none'; currentPlaylistId = null; }
     function showMessage(text) { messageArea.textContent = text; }
-    function extractVideoId(url) { const match = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/); return match ? match[1] : null; }
+    
+    function parseVideoUrl(url) {
+        const videoIdMatch = url.match(/(?:v=|\/)([a-zA-Z0-9_-]{11})/);
+        const timeMatch = url.match(/[?&](?:t|start)=(\d+)/);
+        return {
+            videoId: videoIdMatch ? videoIdMatch[1] : null,
+            startTime: timeMatch ? parseInt(timeMatch[1], 10) : 0
+        };
+    }
 
-    // ===================================================
-    //  AsciiMath エディタ ロジック
-    // ===================================================
     const mathInput = document.getElementById('math-input');
     const mathPreview = document.getElementById('math-preview');
     const toggleMathButton = document.getElementById('toggle-math-button');
     const mathSection = document.getElementById('math-section');
     
-    // スライダー要素の取得
     const mathFontSizeSlider = document.getElementById('math-font-size-slider');
     const mathFontSizeValue = document.getElementById('math-font-size-value');
 
@@ -315,7 +391,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // 文字サイズ変更イベント
     mathFontSizeSlider.addEventListener('input', (e) => {
         const val = e.target.value;
         mathPreview.style.fontSize = val + 'px';
@@ -346,5 +421,5 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     mathInput.addEventListener('input', renderMath);
-    renderMath(); // 初期化
+    renderMath();
 });
