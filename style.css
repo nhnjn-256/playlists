@@ -1,7 +1,3 @@
-/* =========================================
-   オリジナル YouTube プレーヤーのスタイル
-
-/* フォント定義 */
 body[data-font="gothic"] { font-family: '源ノ角ゴシック', sans-serif; }
 body[data-font="kaisho"] { font-family: "Times New Roman", "HG正楷書体-PRO", "KaiTi", "Batang", serif; }
 body[data-font="pixel"] { font-family: "Fusion Pixel 10px Monospaced ja", monospace; }
@@ -178,8 +174,10 @@ button:first-of-type { margin-left: 0; }
     padding: 10px;
     border-radius: 4px;
 }
-.video-details-description a { color: #3ea6ff; text-decoration: none; }
-.video-details-description a:hover { text-decoration: underline; }
+.video-details-description a,
+.timestamp-link { color: #3ea6ff; text-decoration: none; cursor: pointer; }
+.video-details-description a:hover,
+.timestamp-link:hover { text-decoration: underline; }
 
 .fixed-controls {
     position: fixed;
@@ -284,10 +282,6 @@ button:first-of-type { margin-left: 0; }
     position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: #000; z-index: 9998;
 }
 
-/* =========================================
-   AsciiMath エディタのスタイル (上下分割に変更)
-   ========================================= */
-
 #math-section-wrapper {
     margin-top: 40px;
     margin-bottom: 40px;
@@ -295,22 +289,21 @@ button:first-of-type { margin-left: 0; }
 
 .math-container {
     display: flex;
-    flex-direction: column; /* 常に縦並び（上下） */
+    flex-direction: column; 
     gap: 20px;
     margin-top: 20px;
-    /* 画面幅が広いときは高さを確保して、上下に均等に配置 */
     min-height: 600px; 
 }
 
 .math-box {
-    flex: 1; /* 上下のボックスがスペースを等分、または中身に応じて伸縮 */
+    flex: 1; 
     display: flex;
     flex-direction: column;
     background: #1e1e1e;
     border: 1px solid #333;
     border-radius: 8px;
     overflow: hidden;
-    min-height: 250px; /* 最低限の高さを確保 */
+    min-height: 250px; 
 }
 
 .math-box-header {
